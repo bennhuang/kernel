@@ -511,6 +511,7 @@ static int ov4689_g_ctrl(struct ov_camera_module *cam_mod, u32 ctrl_id)
 	return ret;
 }
 
+#if 0
 static int ov4689_filltimings(struct ov_camera_module_custom_config *custom)
 {
 	int i, j;
@@ -621,6 +622,7 @@ static int ov4689_filltimings(struct ov_camera_module_custom_config *custom)
 
 	return 0;
 }
+#endif
 
 static int ov4689_g_timings(struct ov_camera_module *cam_mod,
 	struct ov_camera_module_timings *timings)
@@ -893,15 +895,25 @@ static int ov4689_probe(
 	struct i2c_client *client,
 	const struct i2c_device_id *id)
 {
+	int ret = 0;
+	
 	dev_info(&client->dev, "probing...\n");
 
-	ov4689_filltimings(&ov4689_custom_config);
+	//ov4689_filltimings(&ov4689_custom_config);
 	v4l2_i2c_subdev_init(&ov4689.sd, client, &ov4689_camera_module_ops);
+	ret = ov_camera_module_init(&ov4689, &ov4689_custom_config);
 
-	ov4689.custom = ov4689_custom_config;
+	if (IS_ERR_VALUE(ret))
+		goto err;
+
+	//ov4689.custom = ov4689_custom_config;
 
 	dev_info(&client->dev, "probing successful\n");
 	return 0;
+err:
+	dev_err(&client->dev, "probing failed\n");
+	ov_camera_module_release(&ov4689);
+	return -22;
 }
 
 static int ov4689_remove(struct i2c_client *client)
