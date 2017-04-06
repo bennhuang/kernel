@@ -1172,6 +1172,8 @@ int pltfrm_camera_module_set_pm_state(
 	struct pltfrm_cam_itf itf_cfg;
 	unsigned int i;
 
+	printk("[%s] enter\n", __func__);
+
 	if (on) {
 		if (IS_ERR_OR_NULL(soc_cfg)) {
 			pltfrm_camera_module_pr_err(sd,
@@ -1191,6 +1193,7 @@ int pltfrm_camera_module_set_pm_state(
 					regulator->regulator,
 					regulator->min_uV,
 					regulator->max_uV);
+				printk("[%s] enable regulator %d\n", __func__, i);
 				if (regulator_enable(regulator->regulator))
 					pltfrm_camera_module_pr_err(sd,
 						"regulator_enable failed!\n");
@@ -1264,6 +1267,17 @@ int pltfrm_camera_module_set_pin_state(
 	int gpio_val;
 	int i;
 
+	if (state == PLTFRM_CAMERA_MODULE_PIN_STATE_ACTIVE) {
+		printk("[%s] %s: set active\n", __func__, pin);
+	} else {
+		printk("[%s] %s: set inactive\n", __func__, pin);
+	}
+
+	if (pin == NULL) {
+		printk("[%s] pin is null, skip\n", __func__);
+		return 0;
+	}
+
 	for (i = 0; i < ARRAY_SIZE(pdata->gpios); i++) {
 		if (pin == pdata->gpios[i].label) {
 			if (!gpio_is_valid(pdata->gpios[i].pltfrm_gpio))
@@ -1275,7 +1289,7 @@ int pltfrm_camera_module_set_pin_state(
 				gpio_val = (pdata->gpios[i].active_low ==
 					OF_GPIO_ACTIVE_LOW) ? 1 : 0;
 			gpio_set_value(pdata->gpios[i].pltfrm_gpio, gpio_val);
-			pltfrm_camera_module_pr_debug(sd,
+			pltfrm_camera_module_pr_warn(sd,
 				"set GPIO #%d ('%s') to %s\n",
 				pdata->gpios[i].pltfrm_gpio,
 				pdata->gpios[i].label,
