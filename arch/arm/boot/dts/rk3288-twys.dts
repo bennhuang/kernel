@@ -439,9 +439,9 @@
         camera0:camera-module@0 {
                 status = "okay";
 
-                compatible = "omnivision,ov4689-v4l2-i2c-subdev";
+                compatible = "omnivision,ov13850-v4l2-i2c-subdev";
                 /* SID=low */
-                reg = < 0x36 >;
+                reg = < 0x10 >;
                 device_type = "v4l2-i2c-subdev";
 
 
