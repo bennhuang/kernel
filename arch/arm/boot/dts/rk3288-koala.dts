@@ -344,8 +344,15 @@ linux-rockchip/include/dt-bindings/pinctrl/rk.h
 	#address-cells = <1>;
 	#size-cells = <0>;
 	#sound-dai-cells = <0>;
-	ddc-i2c-bus = <&i2c5>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&hdmi_ddc>;
 	status = "okay";
+	/* Don't use vopl for HDMI */
+	ports {
+		hdmi_in: port {
+			/delete-node/ endpoint@1;
+		};
+	};
 };
 
 &sdio0 {
@@ -597,9 +604,9 @@ I2C
                 reg = < 0x36 >;
                 device_type = "v4l2-i2c-subdev";
 
-                clocks = <&cru SCLK_VIP_OUT>;
-                clock-names = "clk_cif_out";
-
+		clocks = <&cru SCLK_CIFOUT>;
+		clock-names = "clk_cif_out";
+		
 		dovdd-supply = <&dovdd_1v8>; /* 1.8v */
 		dvcc = <&vcc12_dvcc>; /*1.2v*/
 
@@ -607,9 +614,9 @@ I2C
 		rockchip,camera-module-regulator-names ="dovdd_1v8", "vcc12_dvcc";
 		rockchip,camera-module-regulator-voltages = <1800000>, <1200000>;
 
-                pinctrl-names = "rockchip,camera_default", "rockchip,camera_sleep";
-                pinctrl-0 = <&cam0_default_pins>;
-                pinctrl-1 = <&cam0_sleep_pins>;
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&cam0_default_pins>;
+		pinctrl-1 = <&cam0_sleep_pins>;
 
                 /*
                  *  CIFCK0 -> EXTCLK    -> GPIO2_B3 (11)
@@ -704,8 +711,12 @@ I2C
 	status = "okay";
 };
 
-&vopl_mmu {
+&vopl {
 	status = "okay";
+	/* Don't use vopl for HDMI */
+	vopl_out: port {
+		/delete-node/ endpoint@0;
+	};
 };
 
 &pinctrl {
