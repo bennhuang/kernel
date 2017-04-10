@@ -200,7 +200,7 @@
 				sound-dai = <&es8323>;
 			};
 		};
-
+		
 		simple-audio-card,dai-link@1 {
 			format = "i2s";
 			cpu {
@@ -244,6 +244,16 @@
 		flash0-supply = <&vcc_flash>;
 		sdcard-supply = <&vccio_sd>;
 		wifi-supply = <&vccio_wl>;
+	};
+
+	vcc_spk: spk-regulator {
+		compatible = "regulator-fixed";
+		gpio = <&gpio7 15 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&spk_vcc_ctl>;
+		regulator-name = "vcc_spk";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
 	};
 
 };
@@ -431,6 +441,7 @@
 
         es8323: es8323@10 {
                 compatible = "everest,es8323";
+		vcc_spk-supply = <&vcc_spk>;
                 reg = <0x10>;
                 clock-names = "mclk";
                 clocks = <&cru SCLK_I2S0_OUT>;
@@ -723,6 +734,12 @@
 
 		sdmmc_pwr: sdmmc-pwr {
 			rockchip,pins = <7 11 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+
+	audio {
+		spk_vcc_ctl: spk-vcc-ctl {
+			rockchip,pins = <7 15 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
 
