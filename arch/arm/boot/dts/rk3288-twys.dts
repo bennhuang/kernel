@@ -256,6 +256,42 @@
 		regulator-max-microvolt = <3300000>;
 	};
 
+	sensor_2_8_v: sensor_2_8_v-regulator {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		gpio = <&gpio0 17 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sensor_2_8_v_ctl>;
+		regulator-name = "sensor_2_8_v";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		vin-supply = <&vcc_io>;
+	};
+
+	sensor_dovdd: sensor_dovdd-regulator {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		gpio = <&gpio0 10 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sensor_dovdd_ctl>;
+		regulator-name = "sensor_dovdd";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		vin-supply = <&vcc_io>;
+	};
+
+
+	sensor_pd_1v2: sensor_pd_1v2-regulator {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		gpio = <&gpio6 5 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sensor_pd_1v2_ctl>;
+		regulator-name = "sensor_pd_1v2";
+		regulator-min-microvolt = <1200000>;
+		regulator-max-microvolt = <1200000>;
+		vin-supply = <&vcc_io>;
+	};
 };
 
 &cpu0 {
@@ -449,7 +485,6 @@
         };
 };
 
-
 &i2c3 {
 	status = "okay";
 
@@ -464,10 +499,14 @@
                 clocks = <&cru SCLK_VIP_OUT>;
                 clock-names = "clk_cif_out";
 
-		/*vcc_sensor-supply = <&vcc_sensor>;*/
+/*
+		avdd-supply = <&sensor_2_8_v>;
+		dovdd-supply = <&sensor_dovdd>;
+		dvdd-supply = <&sensor_pd_1v2>;
+*/
 
-		rockchip,camera-module-regulator-names ="vcc_sensor";
-		rockchip,camera-module-regulator-voltages = <3300000>;
+		rockchip,camera-module-regulator-names ="sensor_2_8_v", "sensor_dovdd", "sensor_pd_1v2";
+		rockchip,camera-module-regulator-voltages = <3300000>,<1800000>,<1200000>;
 
                 pinctrl-names = "rockchip,camera_default", "rockchip,camera_sleep";
                 pinctrl-0 = <&cam0_default_pins>;
@@ -475,12 +514,12 @@
 
                 /*
                  *  CIFCK0 -> EXTCLK    -> GPIO2_B3 (11)
-                 *  CAMPD  -> PWDN      -> GPIO2_B4 (12)
-                 *  CAMSD  -> XSHUTDOWN -> GPIO2_B5 (13)
+                 *  pwr-gpio: CAMSD  -> XSHUTDOWN -> GPIO2_B4 (12)
+                 *  gp-gpio:  CAMPD  -> PWDN ->      GPIO2_B5 (13)
                  */
 
-                rockchip,pwr-gpio = <&gpio2 13 GPIO_ACTIVE_HIGH>;
-		rockchip,pd-gpio = <&gpio2 12 GPIO_ACTIVE_LOW>;
+                rockchip,pwr-gpio = <&gpio2 12 GPIO_ACTIVE_HIGH>;
+		rockchip,pd-gpio = <&gpio2 13 GPIO_ACTIVE_HIGH>;
 
                 rockchip,camera-module-mclk-name = "clk_cif_out";
                 rockchip,camera-module-dovdd = "1.8v";
@@ -775,6 +814,16 @@
 			rockchip,pins = <2 12 RK_FUNC_GPIO &pcfg_pull_none>,
 				        <2 13 RK_FUNC_GPIO &pcfg_pull_none>,
 					<2 11 RK_FUNC_GPIO &pcfg_pull_none>; /* clkout */
+		};
+
+		sensor_dovdd_ctl: sensor-dovdd-ctl {
+			rockchip,pins = <0 10 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+		sensor_2_8_v_ctl: sensor-2-8-v-ctl {
+			rockchip,pins = <0 17 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+		sensor_pd_1v2_ctl: sensor-pd-1v2-ctl { /* CIF_POWER */
+			rockchip,pins = <6 5 RK_FUNC_GPIO &pcfg_pull_none>;
 		};
 	};
 };

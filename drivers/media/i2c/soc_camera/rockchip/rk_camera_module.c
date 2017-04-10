@@ -186,7 +186,9 @@ static int pltfrm_camera_module_init_gpio(
 		dev_get_platdata(&client->dev);
 	int i = 0;
 
+	printk("[%s] enter1\n", __func__);
 	ret = pltfrm_camera_module_set_pinctrl_state(sd, pdata->pins_default);
+	printk("[%s] enter2\n", __func__);
 	if (IS_ERR_VALUE(ret))
 		goto err;
 
@@ -251,6 +253,7 @@ static int pltfrm_camera_module_init_gpio(
 					);
 		}
 	}
+	printk("[%s] enter3\n", __func__);
 	return 0;
 err:
 	pltfrm_camera_module_pr_err(sd, "failed with error %d\n", ret);
@@ -1175,11 +1178,12 @@ int pltfrm_camera_module_set_pm_state(
 	struct pltfrm_soc_mclk_para mclk_para;
 	struct pltfrm_soc_cfg_para cfg_para;
 	struct pltfrm_cam_itf itf_cfg;
-	unsigned int i;
+	//unsigned int i;
 
 	printk("[%s] enter\n", __func__);
 
 	if (on) {
+		struct pltfrm_camera_module_regulator *regulator = NULL;
 		if (IS_ERR_OR_NULL(soc_cfg)) {
 			pltfrm_camera_module_pr_err(sd,
 				"set_pm_state failed! soc_cfg is %p!\n",
@@ -1187,40 +1191,51 @@ int pltfrm_camera_module_set_pm_state(
 			return -EINVAL;
 		}
 
-		if (pdata->regulators.regulator) {
-			for (i = 0; i < pdata->regulators.cnt; i++) {
-				struct pltfrm_camera_module_regulator
-							*regulator;
-
-				regulator = pdata->regulators.regulator + i;
-				if (IS_ERR(regulator->regulator))
-					continue;
-				regulator_set_voltage(
-					regulator->regulator,
-					regulator->min_uV,
-					regulator->max_uV);
-				printk("[%s] enable regulator %d\n", __func__, i);
-				if (regulator_enable(regulator->regulator))
-					pltfrm_camera_module_pr_err(sd,
-						"regulator_enable failed!\n");
-			}
+		/*1st: avdd*/
+		printk("[%s] enable avdd\n", __func__);
+		regulator = pdata->regulators.regulator;
+		regulator_set_voltage(
+			regulator->regulator,
+			regulator->min_uV,
+			regulator->max_uV);
+		if (regulator_enable(regulator->regulator)) {
+			pltfrm_camera_module_pr_err(sd, "regulator_enable failed!\n");
+		}
+		msleep(500);
+		
+		/*2nd: dovdd & xshutdown*/
+		printk("[%s] enable dovdd & xshutdown\n", __func__);
+		regulator = pdata->regulators.regulator + 1;
+		regulator_set_voltage(
+			regulator->regulator,
+			regulator->min_uV,
+			regulator->max_uV);
+		if (regulator_enable(regulator->regulator)) {
+			pltfrm_camera_module_pr_err(sd, "regulator_enable failed!\n");
 		}
 
-		pltfrm_camera_module_set_pin_state(
-			sd,
-			PLTFRM_CAMERA_MODULE_PIN_PWR,
-			PLTFRM_CAMERA_MODULE_PIN_STATE_ACTIVE);
+		pltfrm_camera_module_set_pin_state(sd, PLTFRM_CAMERA_MODULE_PIN_PWR,
+						   PLTFRM_CAMERA_MODULE_PIN_STATE_ACTIVE);
+		msleep(500);
 
-		pltfrm_camera_module_set_pin_state(
-			sd,
-			PLTFRM_CAMERA_MODULE_PIN_RESET,
-			PLTFRM_CAMERA_MODULE_PIN_STATE_ACTIVE);
-		usleep_range(100, 300);
-		pltfrm_camera_module_set_pin_state(
-			sd,
-			PLTFRM_CAMERA_MODULE_PIN_RESET,
-			PLTFRM_CAMERA_MODULE_PIN_STATE_INACTIVE);
+		/* 3rd: dvdd */
+		
+		printk("[%s] enable dvdd\n", __func__);
+		regulator = pdata->regulators.regulator + 2;
+		regulator_set_voltage(
+			regulator->regulator,
+			regulator->min_uV,
+			regulator->max_uV);
+		if (regulator_enable(regulator->regulator)) {
+			pltfrm_camera_module_pr_err(sd, "regulator_enable failed!\n");
+		}
+		msleep(500);
 
+		/*4th: pwdn rising */
+		printk("[%s] enable pwdn\n", __func__);
+		pltfrm_camera_module_set_pin_state(sd, PLTFRM_CAMERA_MODULE_PIN_PD,
+						   PLTFRM_CAMERA_MODULE_PIN_STATE_ACTIVE);
+		
 		mclk_para.io_voltage = PLTFRM_IO_1V8;
 		mclk_para.drv_strength = PLTFRM_DRV_STRENGTH_2;
 		cfg_para.cmd = PLTFRM_MCLK_CFG;
@@ -1239,7 +1254,10 @@ int pltfrm_camera_module_set_pm_state(
 			clk_set_rate(pdata->mclk, 24000000);
 		}
 		clk_prepare_enable(pdata->mclk);
-	} else {
+	}
+
+#if 0
+	else {
 		clk_disable_unprepare(pdata->mclk);
 
 		pltfrm_camera_module_set_pin_state(
@@ -1259,6 +1277,7 @@ int pltfrm_camera_module_set_pm_state(
 			}
 		}
 	}
+#endif
 
 	return 0;
 }
