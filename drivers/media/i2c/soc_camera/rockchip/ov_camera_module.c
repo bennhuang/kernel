@@ -487,10 +487,11 @@ int ov_camera_module_s_power(struct v4l2_subdev *sd, int on)
 	struct ov_camera_module *cam_mod =  to_ov_camera_module(sd);
 	struct v4l2_subdev *af_ctrl;
 
-	pltfrm_camera_module_pr_debug(&cam_mod->sd, "%d\n", on);
+	printk("[%s] enter, on=%d\n", __func__, on);
 
 	if (on) {
 		if (cam_mod->state == OV_CAMERA_MODULE_POWER_OFF) {
+			printk("[%s] state=POWER_OFF\n", __func__);
 			ret = pltfrm_camera_module_s_power(&cam_mod->sd, 1);
 			if (!IS_ERR_VALUE(ret)) {
 				mdelay(cam_mod->custom.power_up_delays_ms[0]);
@@ -498,6 +499,7 @@ int ov_camera_module_s_power(struct v4l2_subdev *sd, int on)
 			}
 		}
 		if (cam_mod->state == OV_CAMERA_MODULE_HW_STANDBY) {
+			printk("[%s] state=HW_STANDBY\n", __func__);
 			ret = pltfrm_camera_module_set_pin_state(&cam_mod->sd,
 				PLTFRM_CAMERA_MODULE_PIN_PD,
 				PLTFRM_CAMERA_MODULE_PIN_STATE_ACTIVE);
@@ -518,16 +520,19 @@ int ov_camera_module_s_power(struct v4l2_subdev *sd, int on)
 			}
 		}
 		if (cam_mod->update_config) {
+			printk("[%s] update config\n", __func__);
 			ov_camera_module_write_config(cam_mod);
 			cam_mod->update_config = false;
 		}
 	} else {
 		if (cam_mod->state == OV_CAMERA_MODULE_STREAMING) {
+			printk("[%s] state=STREAMING\n", __func__);
 			ret = ov_camera_module_s_stream(sd, 0);
 			if (!IS_ERR_VALUE(ret))
 				cam_mod->state = OV_CAMERA_MODULE_SW_STANDBY;
 		}
 		if (cam_mod->state == OV_CAMERA_MODULE_SW_STANDBY) {
+			printk("[%s] state=SW_STANDBY\n", __func__);
 			ret = pltfrm_camera_module_set_pin_state(
 				&cam_mod->sd,
 				PLTFRM_CAMERA_MODULE_PIN_PD,
@@ -537,6 +542,7 @@ int ov_camera_module_s_power(struct v4l2_subdev *sd, int on)
 				cam_mod->state = OV_CAMERA_MODULE_HW_STANDBY;
 		}
 		if (cam_mod->state == OV_CAMERA_MODULE_HW_STANDBY) {
+			printk("[%s] state=HW_STANDBY\n", __func__);
 			ret = pltfrm_camera_module_s_power(&cam_mod->sd, 0);
 			if (!IS_ERR_VALUE(ret)) {
 				cam_mod->state = OV_CAMERA_MODULE_POWER_OFF;
@@ -556,6 +562,7 @@ int ov_camera_module_s_power(struct v4l2_subdev *sd, int on)
 		pltfrm_camera_module_pr_debug(&cam_mod->sd,
 			"camera powered %s\n", on ? "on" : "off");
 
+	printk("[%s] leave success\n", __func__);
 	return 0;
 err:
 	pltfrm_camera_module_pr_err(&cam_mod->sd,
@@ -1076,6 +1083,7 @@ int ov_camera_module_init(struct ov_camera_module *cam_mod,
 
 	pltfrm_camera_module_pr_debug(&cam_mod->sd, "\n");
 
+	printk("[%s] enter 1\n", __func__);
 	ov_camera_module_reset(cam_mod);
 
 	if (IS_ERR_OR_NULL(custom->start_streaming) ||
@@ -1088,10 +1096,14 @@ int ov_camera_module_init(struct ov_camera_module *cam_mod,
 		goto err;
 	}
 
+
+	printk("[%s] enter 2\n", __func__);
 	ret = pltfrm_camera_module_init(&cam_mod->sd, &cam_mod->pltfm_data);
 	if (IS_ERR_VALUE(ret))
 		goto err;
 
+	printk("[%s] enter 3, skip pull up pwdn at init stage\n", __func__);
+#if 0
 	ret = pltfrm_camera_module_set_pin_state(&cam_mod->sd,
 				PLTFRM_CAMERA_MODULE_PIN_PD,
 				PLTFRM_CAMERA_MODULE_PIN_STATE_ACTIVE);
@@ -1100,6 +1112,8 @@ int ov_camera_module_init(struct ov_camera_module *cam_mod,
 		ov_camera_module_release(cam_mod);
 		goto err;
 	}
+#endif
+	printk("[%s] leave\n", __func__);
 
 	return 0;
 err:

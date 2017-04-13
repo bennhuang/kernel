@@ -236,6 +236,7 @@ static int pltfrm_camera_module_init_gpio(
 				}
 			}
 
+			printk("[%s] init gpio start\n", __func__);
 			if (pdata->gpios[i].label ==
 				PLTFRM_CAMERA_MODULE_PIN_PD)
 				ret = pltfrm_camera_module_set_pin_state(sd,
@@ -251,6 +252,8 @@ static int pltfrm_camera_module_init_gpio(
 					pdata->gpios[i].label,
 					PLTFRM_CAMERA_MODULE_PIN_STATE_INACTIVE
 					);
+
+			printk("[%s] init gpio end\n", __func__);
 		}
 	}
 	printk("[%s] enter3\n", __func__);
@@ -1178,7 +1181,7 @@ int pltfrm_camera_module_set_pm_state(
 	struct pltfrm_soc_mclk_para mclk_para;
 	struct pltfrm_soc_cfg_para cfg_para;
 	struct pltfrm_cam_itf itf_cfg;
-	//unsigned int i;
+	unsigned int i;
 
 	printk("[%s] enter\n", __func__);
 
@@ -1191,6 +1194,11 @@ int pltfrm_camera_module_set_pm_state(
 			return -EINVAL;
 		}
 
+		printk("[%s] enable pwdn\n", __func__);
+		pltfrm_camera_module_set_pin_state(sd, PLTFRM_CAMERA_MODULE_PIN_PD,
+						   PLTFRM_CAMERA_MODULE_PIN_STATE_ACTIVE);
+		msleep(300);
+
 		/*1st: avdd*/
 		printk("[%s] enable avdd\n", __func__);
 		regulator = pdata->regulators.regulator;
@@ -1201,10 +1209,10 @@ int pltfrm_camera_module_set_pm_state(
 		if (regulator_enable(regulator->regulator)) {
 			pltfrm_camera_module_pr_err(sd, "regulator_enable failed!\n");
 		}
-		msleep(500);
+		msleep(300);
 		
-		/*2nd: dovdd & xshutdown*/
-		printk("[%s] enable dovdd & xshutdown\n", __func__);
+		/*2nd: dovdd */
+		printk("[%s] enable dovdd\n", __func__);
 		regulator = pdata->regulators.regulator + 1;
 		regulator_set_voltage(
 			regulator->regulator,
@@ -1214,9 +1222,7 @@ int pltfrm_camera_module_set_pm_state(
 			pltfrm_camera_module_pr_err(sd, "regulator_enable failed!\n");
 		}
 
-		pltfrm_camera_module_set_pin_state(sd, PLTFRM_CAMERA_MODULE_PIN_PWR,
-						   PLTFRM_CAMERA_MODULE_PIN_STATE_ACTIVE);
-		msleep(500);
+		msleep(300);
 
 		/* 3rd: dvdd */
 		
@@ -1229,11 +1235,11 @@ int pltfrm_camera_module_set_pm_state(
 		if (regulator_enable(regulator->regulator)) {
 			pltfrm_camera_module_pr_err(sd, "regulator_enable failed!\n");
 		}
-		msleep(500);
+		msleep(300);
 
-		/*4th: pwdn rising */
-		printk("[%s] enable pwdn\n", __func__);
-		pltfrm_camera_module_set_pin_state(sd, PLTFRM_CAMERA_MODULE_PIN_PD,
+		/*4th: xshudown rising */
+		printk("[%s] enable xshutdown\n", __func__);
+		pltfrm_camera_module_set_pin_state(sd, PLTFRM_CAMERA_MODULE_PIN_PWR,
 						   PLTFRM_CAMERA_MODULE_PIN_STATE_ACTIVE);
 		
 		mclk_para.io_voltage = PLTFRM_IO_1V8;
@@ -1254,10 +1260,8 @@ int pltfrm_camera_module_set_pm_state(
 			clk_set_rate(pdata->mclk, 24000000);
 		}
 		clk_prepare_enable(pdata->mclk);
-	}
-
-#if 0
-	else {
+		msleep(300);
+	} else {
 		clk_disable_unprepare(pdata->mclk);
 
 		pltfrm_camera_module_set_pin_state(
@@ -1277,7 +1281,6 @@ int pltfrm_camera_module_set_pm_state(
 			}
 		}
 	}
-#endif
 
 	return 0;
 }

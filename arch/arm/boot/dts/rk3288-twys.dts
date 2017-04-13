@@ -499,13 +499,11 @@
                 clocks = <&cru SCLK_VIP_OUT>;
                 clock-names = "clk_cif_out";
 
-/*
 		avdd-supply = <&sensor_2_8_v>;
 		dovdd-supply = <&sensor_dovdd>;
 		dvdd-supply = <&sensor_pd_1v2>;
-*/
 
-		rockchip,camera-module-regulator-names ="sensor_2_8_v", "sensor_dovdd", "sensor_pd_1v2";
+		rockchip,camera-module-regulator-names ="avdd", "dovdd", "dvdd";
 		rockchip,camera-module-regulator-voltages = <3300000>,<1800000>,<1200000>;
 
                 pinctrl-names = "rockchip,camera_default", "rockchip,camera_sleep";
@@ -518,8 +516,8 @@
                  *  gp-gpio:  CAMPD  -> PWDN ->      GPIO2_B5 (13)
                  */
 
-                rockchip,pwr-gpio = <&gpio2 12 GPIO_ACTIVE_HIGH>;
-		rockchip,pd-gpio = <&gpio2 13 GPIO_ACTIVE_HIGH>;
+                rockchip,pwr-gpio = <&gpio2 12 GPIO_ACTIVE_HIGH>; /*XSHUTDOWN*/
+		rockchip,pd-gpio = <&gpio2 13 GPIO_ACTIVE_HIGH>;  /*PWDN*/
 
                 rockchip,camera-module-mclk-name = "clk_cif_out";
                 rockchip,camera-module-dovdd = "1.8v";

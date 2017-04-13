@@ -812,6 +812,13 @@ static const char *const rk3288_critical_clocks[] __initconst = {
 	"hclk_peri",
 	"pclk_pd_pmu",
 	"pmu_hclk_otg0",
+	"aclk_peri_niu",
+	"aclk_vio0_niu",
+	"aclk_rga_niu",
+	"pclk_core_niu",
+	"hclk_vio_niu",
+	"pclk_alive_niu",
+	"pclk_pmu_niu",
 };
 
 static void __iomem *rk3288_cru_base;
