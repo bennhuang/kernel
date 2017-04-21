@@ -110,7 +110,7 @@ int pltfrm_camera_module_get_flip_mirror(
 	struct v4l2_subdev *sd);
 
 #define pltfrm_camera_module_pr_debug(dev, fmt, arg...) \
-	pr_debug("%s.%s: " fmt, \
+	printk("%s.%s: " fmt, \
 		pltfrm_dev_string(dev), __func__, ## arg)
 #define pltfrm_camera_module_pr_info(dev, fmt, arg...) \
 	pr_info("%s.%s: " fmt, \
